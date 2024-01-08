@@ -9,12 +9,15 @@ def not_open(file_name, proc):
     Assert that a file name is not open
     """
     # expand input path
-    file_name = g.os.path.abspath(g.os.path.expanduser(file_name))
+    file_name = g.os.path.abspath(
+        g.os.path.expanduser(file_name))
     # assert none of the open files are the one specified
-    assert all(i.path != file_name for i in proc.open_files())
+    assert all(i.path != file_name for i in
+               proc.open_files())
 
 
 class FileTests(g.unittest.TestCase):
+
     def test_close(self):
         """
         Even when loaders crash, we should close files
@@ -22,14 +25,15 @@ class FileTests(g.unittest.TestCase):
         try:
             import psutil
         except ImportError:
-            g.log.warning("no psutil, exiting")
+            g.log.warning('no psutil, exiting')
             return
 
         # a reference to current process
         proc = psutil.Process()
 
         # create a blank empty PLY file
-        f = g.tempfile.NamedTemporaryFile(suffix=".ply", delete=False)
+        f = g.tempfile.NamedTemporaryFile(suffix='.ply',
+                                          delete=False)
         # close file
         f.close()
 
@@ -58,7 +62,8 @@ class FileTests(g.unittest.TestCase):
         g.os.remove(f.name)
 
         # create a blank empty unsupported file
-        f = g.tempfile.NamedTemporaryFile(suffix=".blorb", delete=False)
+        f = g.tempfile.NamedTemporaryFile(suffix='.blorb',
+                                          delete=False)
         # close file
         f.close()
         # file shouldn't be open
@@ -86,7 +91,8 @@ class FileTests(g.unittest.TestCase):
         g.os.remove(f.name)
 
         # create a blank empty DXF file
-        f = g.tempfile.NamedTemporaryFile(suffix=".dxf", delete=False)
+        f = g.tempfile.NamedTemporaryFile(suffix='.dxf',
+                                          delete=False)
         # close file
         f.close()
         # file shouldn't be open
@@ -114,6 +120,6 @@ class FileTests(g.unittest.TestCase):
         g.os.remove(f.name)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     g.trimesh.util.attach_to_log()
     g.unittest.main()

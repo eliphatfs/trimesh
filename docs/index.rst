@@ -1,3 +1,6 @@
+ .. toctree::
+   :maxdepth: 2
+  
 .. include:: README.rst
 
 Links
@@ -12,6 +15,13 @@ Install
 	      
    install.md
 
+Examples
+==========
+.. toctree::
+   :maxdepth: 2
+	      
+   examples.md
+
 Contributing
 ==========  
 .. toctree::
@@ -25,13 +35,6 @@ Docker
    :maxdepth: 1
 
    Docker <docker.md>
-   
-Examples
-==========
-.. toctree::
-   :maxdepth: 1
-	      
-   Examples <examples.rst>
 
 API Reference
 =============

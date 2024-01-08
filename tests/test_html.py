@@ -5,10 +5,12 @@ except BaseException:
 
 
 class ViewTest(g.unittest.TestCase):
+
     def test_JSHTML(self):
+
         import trimesh.viewer.notebook as js
 
-        m = g.get_mesh("featuretype.STL")
+        m = g.get_mesh('featuretype.STL')
         s = m.scene()
 
         # a viewable scene
@@ -17,7 +19,6 @@ class ViewTest(g.unittest.TestCase):
 
         # check it out as an LXML document
         from lxml.html import fromstring
-
         h = fromstring(html)
 
         # should have some children
@@ -32,6 +33,6 @@ class ViewTest(g.unittest.TestCase):
         assert not js.in_notebook()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     g.trimesh.util.attach_to_log()
     g.unittest.main()

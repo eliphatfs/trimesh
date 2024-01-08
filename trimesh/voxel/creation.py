@@ -1,14 +1,20 @@
 import numpy as np
 
-from .. import grouping, remesh, util
-from .. import transformations as tr
 from ..constants import log_time
+from .. import remesh
+from .. import grouping
+from .. import util
+from .. import transformations as tr
+
 from . import base
 from . import encoding as enc
 
 
 @log_time
-def voxelize_subdivide(mesh, pitch: float, max_iter: int = 10, edge_factor: float = 2.0):
+def voxelize_subdivide(mesh,
+                       pitch,
+                       max_iter=10,
+                       edge_factor=2.0):
     """
     Voxelize a surface by subdividing a mesh until every edge is
     shorter than: (pitch / edge_factor)
@@ -32,20 +38,26 @@ def voxelize_subdivide(mesh, pitch: float, max_iter: int = 10, edge_factor: floa
 
     if max_iter is None:
         longest_edge = np.linalg.norm(
-            mesh.vertices[mesh.edges[:, 0]] - mesh.vertices[mesh.edges[:, 1]], axis=1
-        ).max()
-        max_iter = max(int(np.ceil(np.log2(longest_edge / max_edge))), 0)
+            mesh.vertices[mesh.edges[:, 0]] -
+            mesh.vertices[mesh.edges[:, 1]],
+            axis=1).max()
+        max_iter = max(int(np.ceil(np.log2(
+            longest_edge / max_edge))), 0)
 
     # get the same mesh sudivided so every edge is shorter
     # than a factor of our pitch
-    v, f, idx = remesh.subdivide_to_size(
-        mesh.vertices, mesh.faces, max_edge=max_edge, max_iter=max_iter, return_index=True
-    )
+    v, f, idx = remesh.subdivide_to_size(mesh.vertices,
+                                         mesh.faces,
+                                         max_edge=max_edge,
+                                         max_iter=max_iter,
+                                         return_index=True)
 
     # convert the vertices to their voxel grid position
+    hit = v / pitch
+
     # Provided edge_factor > 1 and max_iter is large enough, this is
     # sufficient to preserve 6-connectivity at the level of voxels.
-    hit = np.round(v / pitch).astype(int)
+    hit = np.round(hit).astype(int)
 
     # remove duplicates
     unique, inverse = grouping.unique_rows(hit)
@@ -58,11 +70,16 @@ def voxelize_subdivide(mesh, pitch: float, max_iter: int = 10, edge_factor: floa
 
     return base.VoxelGrid(
         enc.SparseBinaryEncoding(occupied_index - origin_index),
-        transform=tr.scale_and_translate(scale=pitch, translate=origin_position),
-    )
+        transform=tr.scale_and_translate(
+            scale=pitch, translate=origin_position))
 
 
-def local_voxelize(mesh, point, pitch, radius, fill=True, **kwargs):
+def local_voxelize(mesh,
+                   point,
+                   pitch,
+                   radius,
+                   fill=True,
+                   **kwargs):
     """
     Voxelize a mesh in the region of a cube around a point. When fill=True,
     uses proximity.contains to fill the resulting voxels so may be meaningless
@@ -93,12 +110,11 @@ def local_voxelize(mesh, point, pitch, radius, fill=True, **kwargs):
     # this is a gotcha- radius sounds a lot like it should be in
     # float model space, not int voxel space so check
     if not isinstance(radius, int):
-        raise ValueError("radius needs to be an integer number of cubes!")
+        raise ValueError('radius needs to be an integer number of cubes!')
 
     # Bounds of region
-    bounds = np.concatenate(
-        (point - (radius + 0.5) * pitch, point + (radius + 0.5) * pitch)
-    )
+    bounds = np.concatenate((point - (radius + 0.5) * pitch,
+                             point + (radius + 0.5) * pitch))
 
     # faces that intersect axis aligned bounding box
     faces = list(mesh.triangles_tree.intersection(bounds))
@@ -124,15 +140,14 @@ def local_voxelize(mesh, point, pitch, radius, fill=True, **kwargs):
     prepad = np.maximum(radius - center, 0)
     postpad = np.maximum(center + radius + 1 - matrix.shape, 0)
 
-    matrix = np.pad(matrix, np.stack((prepad, postpad), axis=-1), mode="constant")
+    matrix = np.pad(matrix, np.stack((prepad, postpad), axis=-1),
+                    mode='constant')
     center += prepad
 
     # Extract voxels within the bounding box
-    voxels = matrix[
-        center[0] - radius : center[0] + radius + 1,
-        center[1] - radius : center[1] + radius + 1,
-        center[2] - radius : center[2] + radius + 1,
-    ]
+    voxels = matrix[center[0] - radius:center[0] + radius + 1,
+                    center[1] - radius:center[1] + radius + 1,
+                    center[2] - radius:center[2] + radius + 1]
     local_origin = point - radius * pitch  # origin of local voxels
 
     # Fill internal regions
@@ -140,10 +155,12 @@ def local_voxelize(mesh, point, pitch, radius, fill=True, **kwargs):
         regions, n = ndimage.label(~voxels)
         distance = ndimage.distance_transform_cdt(~voxels)
         representatives = [
-            np.unravel_index((distance * (regions == i)).argmax(), distance.shape)
-            for i in range(1, n + 1)
-        ]
-        contains = mesh.contains(np.asarray(representatives) * pitch + local_origin)
+            np.unravel_index((distance * (regions == i)).argmax(),
+                             distance.shape) for i in range(1, n + 1)]
+        contains = mesh.contains(
+            np.asarray(representatives) *
+            pitch +
+            local_origin)
 
         where = np.where(contains)[0] + 1
         # use in1d vs isin for older numpy versions
@@ -155,7 +172,9 @@ def local_voxelize(mesh, point, pitch, radius, fill=True, **kwargs):
 
 
 @log_time
-def voxelize_ray(mesh, pitch, per_cell=None):
+def voxelize_ray(mesh,
+                 pitch,
+                 per_cell=None):
     """
     Voxelize a mesh using ray queries.
 
@@ -209,12 +228,16 @@ def voxelize_ray(mesh, pitch, per_cell=None):
     encoding = enc.SparseBinaryEncoding(voxels)
     origin_position = origin_index * pitch
     return base.VoxelGrid(
-        encoding, tr.scale_and_translate(scale=pitch, translate=origin_position)
-    )
+        encoding,
+        tr.scale_and_translate(scale=pitch, translate=origin_position))
 
 
 @log_time
-def voxelize_binvox(mesh, pitch=None, dimension=None, bounds=None, **binvoxer_kwargs):
+def voxelize_binvox(mesh,
+                    pitch=None,
+                    dimension=None,
+                    bounds=None,
+                    **binvoxer_kwargs):
     """
     Voxelize via binvox tool.
 
@@ -253,20 +276,21 @@ def voxelize_binvox(mesh, pitch=None, dimension=None, bounds=None, **binvoxer_kw
             extents = maxs - mins
         dimension = int(np.ceil(np.max(extents) / pitch))
     if bounds is not None:
-        if "bounding_box" in binvoxer_kwargs:
-            raise ValueError("Cannot provide both bounds and bounding_box")
-        binvoxer_kwargs["bounding_box"] = np.asanyarray(bounds).flatten()
+        if 'bounding_box' in binvoxer_kwargs:
+            raise ValueError('Cannot provide both bounds and bounding_box')
+        binvoxer_kwargs['bounding_box'] = np.asanyarray(bounds).flatten()
 
     binvoxer = binvox.Binvoxer(dimension=dimension, **binvoxer_kwargs)
     return binvox.voxelize_mesh(mesh, binvoxer)
 
 
 voxelizers = util.FunctionRegistry(
-    ray=voxelize_ray, subdivide=voxelize_subdivide, binvox=voxelize_binvox
-)
+    ray=voxelize_ray,
+    subdivide=voxelize_subdivide,
+    binvox=voxelize_binvox)
 
 
-def voxelize(mesh, pitch, method="subdivide", **kwargs):
+def voxelize(mesh, pitch, method='subdivide', **kwargs):
     """
     Voxelize the given mesh using the specified implementation.
 

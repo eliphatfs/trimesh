@@ -5,10 +5,16 @@ import numpy as np
 from .. import util
 
 
-class Camera:
+class Camera(object):
+
     def __init__(
-        self, name=None, resolution=None, focal=None, fov=None, z_near=0.01, z_far=1000.0
-    ):
+            self,
+            name=None,
+            resolution=None,
+            focal=None,
+            fov=None,
+            z_near=0.01,
+            z_far=1000.0):
         """
         Create a new Camera object that stores camera intrinsic
         and extrinsic parameters.
@@ -33,13 +39,13 @@ class Camera:
 
         if name is None:
             # if name is not passed, make it something unique
-            self.name = f"camera_{util.unique_id(6).upper()}"
+            self.name = 'camera_{}'.format(util.unique_id(6).upper())
         else:
             # otherwise assign it
             self.name = name
 
         if fov is None and focal is None:
-            raise ValueError("either focal length or FOV required!")
+            raise ValueError('either focal length or FOV required!')
 
         # store whether or not we computed the focal length
         self._focal_computed = False
@@ -68,8 +74,7 @@ class Camera:
             name=copy.deepcopy(self.name),
             resolution=copy.deepcopy(self.resolution),
             focal=copy.deepcopy(self.focal),
-            fov=copy.deepcopy(self.fov),
-        )
+            fov=copy.deepcopy(self.fov))
 
     @property
     def resolution(self):
@@ -95,7 +100,7 @@ class Camera:
         """
         values = np.asanyarray(values, dtype=np.int64)
         if values.shape != (2,):
-            raise ValueError("resolution must be (2,) float")
+            raise ValueError('resolution must be (2,) float')
         values.flags.writeable = False
         self._resolution = values
         # unset computed value that depends on the other plus resolution
@@ -117,7 +122,8 @@ class Camera:
         """
         if self._focal is None:
             # calculate focal length from FOV
-            focal = self._resolution / (2.0 * np.tan(np.radians(self._fov / 2.0)))
+            focal = (
+                self._resolution / (2.0 * np.tan(np.radians(self._fov / 2.0))))
             focal.flags.writeable = False
             self._focal = focal
 
@@ -142,7 +148,7 @@ class Camera:
             self._focal_computed = False
             values = np.asanyarray(values, dtype=np.float64)
             if values.shape != (2,):
-                raise ValueError("focal length must be (2,) float")
+                raise ValueError('focal length must be (2,) float')
             values.flags.writeable = False
             # assign passed values to focal length
             self._focal = values
@@ -171,10 +177,12 @@ class Camera:
             return
         values = np.asanyarray(values, dtype=np.float64)
         if values.shape != (3, 3):
-            raise ValueError("matrix must be (3,3)!")
+            raise ValueError('matrix must be (3,3)!')
 
-        if not np.allclose(values.flatten()[[1, 3, 6, 7, 8]], [0, 0, 0, 0, 1]):
-            raise ValueError("matrix should only have focal length and resolution!")
+        if not np.allclose(values.flatten()[[1, 3, 6, 7, 8]],
+                           [0, 0, 0, 0, 1]):
+            raise ValueError(
+                'matrix should only have focal length and resolution!')
 
         # set focal length from matrix
         self.focal = [values[0, 0], values[1, 1]]
@@ -192,7 +200,8 @@ class Camera:
           XY field of view in degrees
         """
         if self._fov is None:
-            fov = 2.0 * np.degrees(np.arctan((self._resolution / 2.0) / self._focal))
+            fov = 2.0 * np.degrees(
+                np.arctan((self._resolution / 2.0) / self._focal))
             fov.flags.writeable = False
             self._fov = fov
         return self._fov
@@ -216,7 +225,7 @@ class Camera:
             self._focal_computed = True
             values = np.asanyarray(values, dtype=np.float64)
             if values.shape != (2,):
-                raise ValueError("fov length must be (2,) int")
+                raise ValueError('fov length must be (2,) int')
             values.flags.writeable = False
             # assign passed values to FOV
             self._fov = values
@@ -269,10 +278,13 @@ class Camera:
         transform : (4, 4) float
           Transformation matrix from world to camera
         """
-        return look_at(points, fov=self.fov, **kwargs)
+        return look_at(points,
+                       fov=self.fov,
+                       **kwargs)
 
     def __repr__(self):
-        return f"<trimesh.scene.Camera> FOV: {self.fov} Resolution: {self.resolution}"
+        return '<trimesh.scene.Camera> FOV: {} Resolution: {}'.format(
+            self.fov, self.resolution)
 
 
 def look_at(points, fov, rotation=None, distance=None, center=None, pad=None):
@@ -327,11 +339,12 @@ def look_at(points, fov, rotation=None, distance=None, center=None, pad=None):
     points_c -= center_c
 
     # Find the minimum distance for the camera from the origin
-    # so that all points fit in the view frustum
+    # so that all points fit in the view frustrum
     tfov = np.tan(np.radians(fov) / 2.0)
 
     if distance is None:
-        distance = np.max(np.abs(points_c[:, :2]) / tfov + points_c[:, 2][:, np.newaxis])
+        distance = np.max(np.abs(points_c[:, :2]) /
+                          tfov + points_c[:, 2][:, np.newaxis])
 
     if pad is not None:
         distance *= pad
@@ -389,13 +402,13 @@ def ray_pixel_coords(camera):
 
     # create a grid of vectors
     xy = util.grid_linspace(
-        bounds=[[left, top], [right, bottom]], count=camera.resolution
-    )
+        bounds=[[left, top], [right, bottom]],
+        count=camera.resolution)
 
     # create a matching array of pixel indexes for the rays
     pixels = util.grid_linspace(
-        bounds=[[0, res[1] - 1], [res[0] - 1, 0]], count=res
-    ).astype(np.int64)
+        bounds=[[0, res[1] - 1], [res[0] - 1, 0]],
+        count=res).astype(np.int64)
     assert xy.shape == pixels.shape
 
     return xy, pixels
@@ -419,5 +432,6 @@ def camera_to_rays(camera):
     # get the on-plane coordinates
     xy, pixels = ray_pixel_coords(camera)
     # convert vectors to 3D unit vectors
-    vectors = util.unitize(np.column_stack((xy, -np.ones_like(xy[:, :1]))))
+    vectors = util.unitize(
+        np.column_stack((xy, -np.ones_like(xy[:, :1]))))
     return vectors, pixels

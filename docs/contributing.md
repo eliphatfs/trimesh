@@ -71,16 +71,20 @@ if __name__ == '__main__':
 When you remove the embed and see the profile result you can then tweak the lines that are slow before finishing the function.
 
 ### Automatic Formatting
-Trimesh uses `ruff` for both linting and formatting which is configured in `pyproject.toml`, you can run with:
+Before opening a pull request I run some auto-formatting rules which will run autopep8 and yell at you about any `ruff` rule violations. There is a convenience script baked into `setup.py` to run all of these which you can run with:
 ```
-ruff . --fix
-ruff format .
+python setup.py --format
+```
+
+This is equivalent to running `codespell`, `autopep8`, and `flake8` on trimesh, examples, and tests. You can also run it yourself with these options:
+```
+autopep8 --recursive --verbose --in-place --aggressive trimesh
+flake8 trimesh
 ```
 
 ## Docstrings
 
 Trimesh uses the [Sphinx Numpy-style](https://www.sphinx-doc.org/en/master/usage/extensions/example_numpy.html#example-numpy) docstrings which get parsed into the API reference page. 
-
 
 ## General Tips
 

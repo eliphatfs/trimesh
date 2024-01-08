@@ -1,10 +1,13 @@
 import numpy as np
 
 from .. import util
+
 from ..constants import tol_path as tol
 
 
-def line_line(origins, directions, plane_normal=None):
+def line_line(origins,
+              directions,
+              plane_normal=None):
     """
     Find the intersection between two lines.
     Uses terminology from:
@@ -66,8 +69,9 @@ def line_line(origins, directions, plane_normal=None):
         return False, None
 
     # value of parameter s where intersection occurs
-    s_I = np.dot(-v_perp, w) / np.dot(v_perp, u)
+    s_I = (np.dot(-v_perp, w) /
+           np.dot(v_perp, u))
     # plug back into the equation of the line to find the point
     intersection = p_0 + s_I * u
 
-    return True, intersection[: (3 - is_2D)]
+    return True, intersection[:(3 - is_2D)]

@@ -2,20 +2,8 @@
 boolean.py
 -------------
 
-Do boolean operations on meshes using either Blender or Manifold.
+Do boolean operations on meshes using either Blender or OpenSCAD.
 """
-import warnings
-
-import numpy as np
-
-try:
-    from manifold3d import Manifold, Mesh
-except BaseException as E:
-    from .exceptions import ExceptionWrapper
-
-    Mesh = ExceptionWrapper(E)
-    Manifold = ExceptionWrapper(E)
-
 from . import interfaces
 
 
@@ -28,13 +16,13 @@ def difference(meshes, engine=None, **kwargs):
     meshes : list of trimesh.Trimesh
       Meshes to be processed
     engine : str
-      Which backend to use, i.e. 'blender' or 'manifold'
+      Which backend to use, i.e. 'blender' or 'scad'
 
     Returns
     ----------
     difference : a - (other meshes), **kwargs for a Trimesh
     """
-    result = _engines[engine](meshes, operation="difference", **kwargs)
+    result = _engines[engine](meshes, operation='difference', **kwargs)
     return result
 
 
@@ -47,13 +35,13 @@ def union(meshes, engine=None, **kwargs):
     meshes : list of trimesh.Trimesh
       Meshes to be processed
     engine : str
-      Which backend to use, i.e. 'blender' or 'manifold'
+      Which backend to use, i.e. 'blender' or 'scad'
 
     Returns
     ----------
     union : a + (other meshes), **kwargs for a Trimesh
     """
-    result = _engines[engine](meshes, operation="union", **kwargs)
+    result = _engines[engine](meshes, operation='union', **kwargs)
     return result
 
 
@@ -66,76 +54,44 @@ def intersection(meshes, engine=None, **kwargs):
     meshes : list of trimesh.Trimesh
       Meshes to be processed
     engine : str
-      Which backend to use, i.e. 'blender' or 'manifold'
+      Which backend to use, i.e. 'blender' or 'scad'
 
     Returns
     ----------
     intersection : **kwargs for a Trimesh object of the
                     volume that is contained by all meshes
     """
-    result = _engines[engine](meshes, operation="intersection", **kwargs)
+    result = _engines[engine](meshes, operation='intersection', **kwargs)
     return result
 
 
-def boolean_manifold(meshes, operation, debug=False, **kwargs):
+def boolean_automatic(meshes, operation, **kwargs):
     """
-    Run an operation on a set of meshes using the Manifold engine.
+    Automatically pick an engine for booleans based on availability.
+
+    Parameters
+    --------------
+    meshes : list of Trimesh
+      Meshes to be booleaned
+    operation : str
+      Type of boolean, i.e. 'union', 'intersection', 'difference'
+
+    Returns
+    ---------------
+    result : trimesh.Trimesh
+      Result of boolean operation
     """
-    # Convert to manifold meshes
-    manifolds = [
-        Manifold.from_mesh(
-            Mesh(
-                vert_properties=np.asarray(mesh.vertices, dtype="float32"),
-                tri_verts=np.asarray(mesh.faces, dtype="int32"),
-            )
-        )
-        for mesh in meshes
-    ]
-
-    # Perform operations
-    if operation == "difference":
-        if len(meshes) != 2:
-            raise ValueError("Difference only defined over two meshes.")
-
-        result_manifold = manifolds[0] - manifolds[1]
-    elif operation == "union":
-        result_manifold = manifolds[0]
-
-        for manifold in manifolds[1:]:
-            result_manifold = result_manifold + manifold
-    elif operation == "intersection":
-        result_manifold = manifolds[0]
-
-        for manifold in manifolds[1:]:
-            result_manifold = result_manifold ^ manifold
+    if interfaces.blender.exists:
+        result = interfaces.blender.boolean(meshes, operation, **kwargs)
+    elif interfaces.scad.exists:
+        result = interfaces.scad.boolean(meshes, operation, **kwargs)
     else:
-        raise ValueError(f"Invalid boolean operation: '{operation}'")
-
-    # Convert back to trimesh meshes
-    from . import Trimesh
-
-    result_mesh = result_manifold.to_mesh()
-    out_mesh = Trimesh(vertices=result_mesh.vert_properties, faces=result_mesh.tri_verts)
-
-    return out_mesh
-
-
-def boolean_scad(*args, **kwargs):
-    warnings.warn(
-        "The OpenSCAD interface is deprecated, and Trimesh will instead"
-        " use Manifold ('manifold'), which should be equivalent. In future versions"
-        " of Trimesh, attempting to use engine 'scad' may raise an error.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    return boolean_manifold(*args, **kwargs)
+        raise ValueError('No backends available for boolean operations!')
+    return result
 
 
 # which backend boolean engines
-_engines = {
-    None: boolean_manifold,
-    "auto": boolean_manifold,
-    "manifold": boolean_manifold,
-    "scad": boolean_scad,
-    "blender": interfaces.blender.boolean,
-}
+_engines = {None: boolean_automatic,
+            'auto': boolean_automatic,
+            'scad': interfaces.scad.boolean,
+            'blender': interfaces.blender.boolean}

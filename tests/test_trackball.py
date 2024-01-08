@@ -7,9 +7,13 @@ from trimesh.viewer.trackball import Trackball
 
 
 class TrackballTest(g.unittest.TestCase):
+
     def test_resize(self):
         trackball = Trackball(
-            pose=g.np.eye(4), size=(640, 480), scale=1.0, target=g.np.array([0, 0, 0])
+            pose=g.np.eye(4),
+            size=(640, 480),
+            scale=1.0,
+            target=g.np.array([0, 0, 0])
         )
         trackball.down((320, 240))
         trackball.drag((321, 240))
@@ -23,7 +27,10 @@ class TrackballTest(g.unittest.TestCase):
 
     def test_drag_rotate(self):
         trackball = Trackball(
-            pose=g.np.eye(4), size=(640, 480), scale=1.0, target=g.np.array([0, 0, 0])
+            pose=g.np.eye(4),
+            size=(640, 480),
+            scale=1.0,
+            target=g.np.array([0, 0, 0])
         )
 
         # rotates around y-axis
@@ -64,7 +71,10 @@ class TrackballTest(g.unittest.TestCase):
 
     def test_drag_roll(self):
         trackball = Trackball(
-            pose=g.np.eye(4), size=(640, 480), scale=1.0, target=g.np.array([0, 0, 0])
+            pose=g.np.eye(4),
+            size=(640, 480),
+            scale=1.0,
+            target=g.np.array([0, 0, 0])
         )
 
         # rotates around z-axis
@@ -88,7 +98,10 @@ class TrackballTest(g.unittest.TestCase):
 
     def test_drag_pan(self):
         trackball = Trackball(
-            pose=g.np.eye(4), size=(640, 480), scale=1.0, target=g.np.array([0, 0, 0])
+            pose=g.np.eye(4),
+            size=(640, 480),
+            scale=1.0,
+            target=g.np.array([0, 0, 0])
         )
 
         # translate to x
@@ -103,7 +116,10 @@ class TrackballTest(g.unittest.TestCase):
     def test_drag_zoom(self):
         pose = g.trimesh.transformations.translation_matrix([0, 0, 1])
         trackball = Trackball(
-            pose=pose, size=(640, 480), scale=1.0, target=g.np.array([0, 0, 0])
+            pose=pose,
+            size=(640, 480),
+            scale=1.0,
+            target=g.np.array([0, 0, 0])
         )
 
         # translate to x
@@ -119,7 +135,10 @@ class TrackballTest(g.unittest.TestCase):
     def test_scroll(self):
         pose = g.trimesh.transformations.translation_matrix([0, 0, 1])
         trackball = Trackball(
-            pose=pose, size=(640, 480), scale=1.0, target=g.np.array([0, 0, 0])
+            pose=pose,
+            size=(640, 480),
+            scale=1.0,
+            target=g.np.array([0, 0, 0])
         )
         g.np.testing.assert_allclose(trackball.pose[:3, :3], g.np.eye(3))
         g.np.testing.assert_allclose(trackball.pose[:3, 3], [0, 0, 1])
@@ -129,7 +148,10 @@ class TrackballTest(g.unittest.TestCase):
 
     def test_rotate(self):
         trackball = Trackball(
-            pose=g.np.eye(4), size=(640, 480), scale=1.0, target=g.np.array([0, 0, 0])
+            pose=g.np.eye(4),
+            size=(640, 480),
+            scale=1.0,
+            target=g.np.array([0, 0, 0])
         )
         # rotates around y-axis
         trackball.rotate(g.np.deg2rad(1))
@@ -146,6 +168,6 @@ class TrackballTest(g.unittest.TestCase):
         g.np.testing.assert_allclose(trackball.pose[3, :], [0, 0, 0, 1])
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     g.trimesh.util.attach_to_log()
     g.unittest.main()

@@ -152,7 +152,8 @@ def specular_to_pbr(
                     specularGlossinessTexture.shape[-1]) == 1:
                 # use the one channel as a multiplier for specular and glossiness
                 specularTexture = glossinessTexture = specularGlossinessTexture.reshape(
-                    (-1, -1, 1))
+                    specularGlossinessTexture.shape[0], specularGlossinessTexture.shape[1], 1
+                )
             elif specularGlossinessTexture.shape[-1] == 3:
                 # all channels are specular, glossiness is only a factor
                 specularTexture = specularGlossinessTexture[..., :3]
